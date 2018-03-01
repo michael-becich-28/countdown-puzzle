@@ -19,7 +19,5 @@ class CountdownPuzzleConfig(object):
     	self.alphabet = self.__alphabet__
     	self.codes = self.__codes__
 
-	def code_is_correct(self, letter, code):
-		return self.alphabet.index(letter) == self.codes.index(code)
-
-
+    def code_is_correct(self, letter, code):
+        return self.alphabet.index(letter) == self.codes.index(code)
