@@ -21,5 +21,3 @@ class CountdownPuzzleConfig(object):
 
     def code_is_correct(self, letter, code):
         return self.alphabet.index(letter) == self.codes.index(code)
-
-
