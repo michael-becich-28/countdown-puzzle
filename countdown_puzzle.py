@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import pickle
 import time
-import kivy_gui
 
 class CountdownPuzzleConfig(object):
 
@@ -16,9 +15,11 @@ class CountdownPuzzleConfig(object):
                  656, 535, 811, 878, 204, 822, 316, 763, 117, 884, 777, 766, 
                  601, 787]
 
-    def __init__(self, mean_reset_interval=60):
-    	self.mean_reset_interval = mean_reset_interval
-    	self.alphabet = __alphabet__
-    	self.codes = __codes__
+    def __init__(self):
+    	self.alphabet = self.__alphabet__
+    	self.codes = self.__codes__
+
+	def code_is_correct(self, letter, code):
+		return self.alphabet.index(letter) == self.codes.index(code)
 
 
