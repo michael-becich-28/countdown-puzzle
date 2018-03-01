@@ -21,3 +21,8 @@ class CountdownPuzzleConfig(object):
 
     def code_is_correct(self, letter, code):
         return self.alphabet.index(letter) == self.codes.index(code)
+
+    def select_random_letter(size=26):
+        assert size > 0 and size <= 26
+        selection = np.random.choice(self.alphabet[:size])
+        return selection

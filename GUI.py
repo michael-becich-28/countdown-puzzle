@@ -1,41 +1,3 @@
-##from kivy.app import App
-##from kivy.uix.button import Button
-##
-##class TestApp(App):
-##    def build(self):
-##        return Button(text='Hello World')
-##
-##TestApp().run()
-
-##from kivy.app import App
-##from kivy.uix.label import Label
-##from kivy.animation import Animation
-##from kivy.properties import StringProperty, NumericProperty
-##
-##class IncrediblyCrudeClock(Label):
-##    time = random.randint(30, 120);
-##    a = NumericProperty(time)  # seconds
-##
-##    def start(self):
-##        Animation.cancel_all(self)  # stop any current animations
-##        self.anim = Animation(a=0, duration=self.a)
-##        def finish_callback(animation, incr_crude_clock):
-##            incr_crude_clock.text = "FINISHED"
-##        self.anim.bind(on_complete=finish_callback)
-##        self.anim.start(self)
-##
-##    def on_a(self, instance, value):
-##        self.text = str(round(value, 1))
-##
-##class TimeApp(App):
-##    def build(self):
-##        crudeclock = IncrediblyCrudeClock()
-##        crudeclock.start()
-##        return crudeclock
-##
-##if __name__ == "__main__":
-##    TimeApp().run()
-
 from kivy.config import Config
 Config.set('graphics', 'width', '700')
 Config.set('graphics', 'height', '200')
@@ -43,6 +5,9 @@ Config.write()
 
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
 from kivy.lang import Builder
 from kivy.properties import BooleanProperty, StringProperty
 from kivy.clock import Clock
@@ -65,7 +30,9 @@ from countdown_puzzle import CountdownPuzzleConfig
 ######
 
 
-countdown = random.randint(30, 120)/600
+countdown = get_random_time
+def get_random_time():
+    return random.randint(30, 120)/60
 
 Builder.load_string("""
 <MainLayout>:
@@ -84,13 +51,14 @@ class MainLayout(FloatLayout):
     minutes = StringProperty()
     seconds = StringProperty()
     running = BooleanProperty(False)
-    config = CountdownPuzzleConfig()
+    config  = CountdownPuzzleConfig()
 
     def __init__(self, **kwargs):
         super(MainLayout, self).__init__(**kwargs)
         self.sound = SoundLoader.load('bell.wav')
-        self.delta = datetime.datetime.now()+datetime.timedelta(0, 60*countdown)
+        self.delta = datetime.datetime.now()+datetime.timedelta(0, 60*countdown())
         self.update()
+        
 
     def start(self):
         if not self.running:
@@ -117,15 +85,44 @@ class MainLayout(FloatLayout):
 
     def toggle(self):
         if self.running:
-            self.stop()
+            #self.stop()
+            pass
         else:
             self.start()
 
-
 if __name__ == '__main__':
+    size = int(input("How many people in the group? (1-26):"))
 
     class TimerApp(App):
         def build(self):
-            return MainLayout()
+            self.config = CountdownPuzzleConfig()
+
+            self.layout = MainLayout()
+            self.group_size = size
+            
+            self.letter = config.select_random_letter(self.group_size)
+
+            self.prompt_label = Label(text="Enter the code for %s:" % self.letter)
+            self.layout.add_widget(prompt_label)
+
+            self.txt = TextInput(text='', multiline=False)
+            self.layout.add_widget(txt)
+
+            self.confirm_button = Button("Enter")
+            self.confirm_button.bind(on_press=self.send_entry)
+            self.layout.add_widget(confirm_button)
+
+            return self.layout
+        
+        def send_entry(self, button):
+            self.entered_code = self.txt.text
+            if self.entered_code.isdigit():
+                code = int(self.entered_code)
+                correct = self.config.code_is_correct(self.letter, code)
+
+                if correct: 
+                    self.delta = datetime.datetime.now()+datetime.timedelta(0, 60*countdown())
+                    self.layout.update()
+                    
 
     TimerApp().run()
