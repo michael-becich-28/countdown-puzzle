@@ -30,9 +30,9 @@ from countdown_puzzle import CountdownPuzzleConfig
 ######
 
 
-countdown = get_random_time
 def get_random_time():
     return random.randint(30, 120)/60
+countdown = get_random_time
 
 Builder.load_string("""
 <MainLayout>:
