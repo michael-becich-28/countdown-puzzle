@@ -18,7 +18,6 @@ import datetime
 import random
 import numpy as np
 
-from countdown_puzzle import CountdownPuzzleConfig
 
 
 ######
@@ -50,7 +49,7 @@ def select_random_letter(size):
     return selection
 
 def get_random_time():
-    return random.randint(10, 15)
+    return random.randint(30, 60)
 
 """
 <MainLayout>
@@ -133,7 +132,7 @@ class MainLayout(GridLayout):
                 
                     self.nb_explosions = str(int(self.nb_explosions) + 1)
                     # Refresh timer
-                    
+
                     self.stop()
                     self.deadline = datetime.datetime.now()+datetime.timedelta(0, get_random_time())
                     self.letter = select_random_letter(self.group_size)
