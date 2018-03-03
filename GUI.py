@@ -18,7 +18,7 @@ import datetime
 import random
 import numpy as np
 
-
+import time
 
 ######
 # How to use?
@@ -49,7 +49,7 @@ def select_random_letter(size):
     return selection
 
 def get_random_time():
-    return random.randint(30, 60)
+    return random.randint(25, 40)
 
 """
 <MainLayout>
@@ -68,21 +68,27 @@ Builder.load_string("""
     rows: 3
     cols: 2
     Label:
+        id: timer_text
         text: "Timer: "
         font_size: 30
     Label:
+        id: timer_time
         text: "%s:%s" % (root.minutes, root.seconds)
         font_size: 30
     Label:
+        id: prompt
         text: "Enter code for %s: " % root.letter
         font_size: 30
     TextInput:
+        id: input_code
         on_text_validate: root.send_entry(args[0])
         multiline: False
     Label:
+        id: explosions_text
         text: "Explosions: "
         font_size: 30
     Label:
+        id: explosions_display
         text: "%s" % root.nb_explosions
         font_size: 30
 """)
@@ -92,17 +98,18 @@ class MainLayout(GridLayout):
     minutes = StringProperty()
     seconds = StringProperty()
     running = BooleanProperty(False)
-    #config  = CountdownPuzzleConfig()
     letter  = StringProperty("A")
     nb_explosions = StringProperty("0")
 
     def __init__(self, **kwargs):
-        super(MainLayout, self).__init__(**kwargs)
+        super(MainLayout, self).__init__()
         #self.sound = SoundLoader.load('bell.wav')
         self.deadline = datetime.datetime.now()+datetime.timedelta(0, get_random_time())
         self.group_size = kwargs['group_size'] # from kwargs
         self.letter = select_random_letter(self.group_size)
-        #self.letter = letter # from kwargs
+        self.app = kwargs['app']
+        self.timer_is_red = False
+        self.start_flashing_time = None
         
         self.update()
         self.start()
@@ -124,6 +131,13 @@ class MainLayout(GridLayout):
         time_left = self.deadline - datetime.datetime.now()
         self.minutes, seconds = str(time_left).split(":")[1:]
         self.seconds = seconds[:5]
+
+        if self.start_flashing_time is not None:
+            if time.time() - self.start_flashing_time > 1.:
+                Clock.unschedule(self.toggle_color)
+                self.ids.timer_time.color = (1, 1, 1, 1)
+                self.timer_is_red = False
+                self.start_flashing_time = None
 
         if int(self.minutes) == 0:
             if int(self.seconds.split(".")[0]) == 0:
@@ -152,11 +166,21 @@ class MainLayout(GridLayout):
         if code.isdigit():
             code = int(code)
             correct = code_is_correct(self.letter, code)
-            print("the code was correct: %s" % str(correct))
-            time_is_low = float(self.seconds) < 10.
-            print("Time is low: %s" % str(time_is_low))
+            #print("the code was correct: %s" % str(correct))
+            time_is_low = float(self.seconds) < 15.
+            #print("Time is low: %s" % str(time_is_low))
 
-            if correct and time_is_low: 
+            if not correct:
+                self.nb_explosions = str(int(self.nb_explosions) + 1)
+                print("Code was wrong! Exploded")
+                self.flash_red()
+
+            elif not time_is_low:
+                self.nb_explosions = str(int(self.nb_explosions) + 1)
+                print("The time isn't under 15 seconds yet, too early! Exploded")
+                self.flash_red()
+
+            else: # correct and time is low
                 print("The clock is running, ", self.running)
                 self.stop()
                 self.deadline = datetime.datetime.now()+datetime.timedelta(0, get_random_time())
@@ -166,6 +190,19 @@ class MainLayout(GridLayout):
         else:
             print("Nope not an int")
 
+    def toggle_color(self, something):
+        #print(something)
+        if self.timer_is_red:
+            self.ids.timer_time.color = (1, 1, 1, 1)
+            self.timer_is_red = False
+        else:
+            self.ids.timer_time.color = (1, 0, 0, 1)
+            self.timer_is_red = True
+    
+    def flash_red(self):
+        self.start_flashing_time = time.time()
+        Clock.schedule_interval(self.toggle_color, 0.1)    
+            
 
 
 def get_number_students():
@@ -185,8 +222,7 @@ if __name__ == '__main__':
 
     class TimerApp(App):
         def build(self):
-            self.layout = MainLayout(group_size=size)
+            self.layout = MainLayout(group_size=size, app=self)
             return self.layout
-                
 
     TimerApp().run()
